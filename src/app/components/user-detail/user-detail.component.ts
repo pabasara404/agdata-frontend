@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, finalize } from 'rxjs';
-import { UserService } from '../services/user.service';
-import { User, UserUpdate } from '../models/user';
+import { UserService } from '../../services/user.service';
+import { UserModel, UserUpdate } from '../../models/user.model';
 
 @Component({
   selector: 'app-user-detail',
@@ -14,7 +14,7 @@ import { User, UserUpdate } from '../models/user';
 export class UserDetailComponent implements OnInit, OnDestroy {
   @Input() userId!: number;
 
-  user: User | null = null;
+  user: UserModel | null = null;
   loading = false;
 
   editForm: FormGroup;
@@ -93,7 +93,7 @@ export class UserDetailComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.editMode = false;
-          alert('User updated successfully');
+          alert('UserModel updated successfully');
           this.loadUser(); // Reload the user data
         },
         error: (err) => {

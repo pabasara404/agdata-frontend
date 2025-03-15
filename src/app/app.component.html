@@ -1,11 +1,19 @@
-<style>
-  .page-title {
-    margin: 2rem 0 2rem;
-    text-align: center;
-  }
-</style>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="#">AgData User Management</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/users" routerLinkActive="active">Users</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
 
-<div>
-  <h1 class="page-title">User Management System</h1>
-    <router-outlet />
+<div class="container mt-4">
+  <router-outlet></router-outlet>
 </div>

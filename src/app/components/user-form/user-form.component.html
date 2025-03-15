@@ -1,0 +1,115 @@
+<div class="container mt-4">
+  <h2>{{ isEditMode ? 'Edit' : 'Create' }} User</h2>
+
+  <div *ngIf="loading" class="text-center my-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+    <div class="mb-3">
+      <label for="username" class="form-label">Username</label>
+      <input
+        type="text"
+        class="form-control"
+        id="username"
+        formControlName="username"
+        [class.is-invalid]="userForm.get('username')?.invalid && userForm.get('username')?.touched"
+      >
+      <div class="invalid-feedback" *ngIf="userForm.get('username')?.errors?.['required']">
+        Username is required
+      </div>
+      <div class="invalid-feedback" *ngIf="userForm.get('username')?.errors?.['minlength']">
+        Username must be at least 3 characters
+      </div>
+      <div class="invalid-feedback" *ngIf="userForm.get('username')?.errors?.['maxlength']">
+        Username cannot exceed 50 characters
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input
+        type="email"
+        class="form-control"
+        id="email"
+        formControlName="email"
+        [class.is-invalid]="userForm.get('email')?.invalid && userForm.get('email')?.touched"
+      >
+      <div class="invalid-feedback" *ngIf="userForm.get('email')?.errors?.['required']">
+        Email is required
+      </div>
+      <div class="invalid-feedback" *ngIf="userForm.get('email')?.errors?.['email']">
+        Please enter a valid email address
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Notification Preferences</h5>
+      </div>
+      <div class="card-body" formGroupName="notificationPreferences">
+        <div class="form-check mb-3">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="emailEnabled"
+            formControlName="emailEnabled"
+          >
+          <label class="form-check-label" for="emailEnabled">
+            Enable Email Notifications
+          </label>
+          <small class="form-text text-muted d-block">
+            If enabled, the user will receive a password setup email upon account creation.
+          </small>
+        </div>
+
+        <div class="form-check mb-3">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="slackEnabled"
+            formControlName="slackEnabled"
+          >
+          <label class="form-check-label" for="slackEnabled">
+            Enable Slack Notifications
+          </label>
+        </div>
+
+        <div class="mb-3" *ngIf="userForm.get('notificationPreferences.slackEnabled')?.value">
+          <label for="slackWebhookUrl" class="form-label">Slack Webhook URL</label>
+          <input
+            type="text"
+            class="form-control"
+            id="slackWebhookUrl"
+            formControlName="slackWebhookUrl"
+            [class.is-invalid]="userForm.get('notificationPreferences.slackWebhookUrl')?.invalid && userForm.get('notificationPreferences.slackWebhookUrl')?.touched"
+          >
+          <div class="invalid-feedback" *ngIf="userForm.get('notificationPreferences.slackWebhookUrl')?.errors?.['required']">
+            Slack Webhook URL is required when Slack notifications are enabled
+          </div>
+          <div class="invalid-feedback" *ngIf="userForm.get('notificationPreferences.slackWebhookUrl')?.errors?.['pattern']">
+            Please enter a valid Slack webhook URL (https://hooks.slack.com/...)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary" [disabled]="submitting">
+        <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        {{ isEditMode ? 'Update' : 'Create' }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+    </div>
+  </form>
+</div>

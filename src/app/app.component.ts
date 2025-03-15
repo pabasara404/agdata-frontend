@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
+import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
-import {UserListComponent} from './user-list/user-list.component';
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, UserListComponent]
+  imports: [RouterOutlet, RouterModule, CommonModule],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'user-management-app';
+  title = 'AgData User Management';
 }
