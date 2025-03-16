@@ -1,0 +1,59 @@
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0">Create New Post</h5>
+  </div>
+  <div class="card-body">
+    <div *ngIf="error" class="alert alert-danger">
+      {{ error }}
+    </div>
+
+    <form [formGroup]="postForm" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input
+          type="text"
+          class="form-control"
+          id="title"
+          formControlName="title"
+          [class.is-invalid]="postForm.get('title')?.invalid && postForm.get('title')?.touched"
+        >
+        <div class="invalid-feedback" *ngIf="postForm.get('title')?.errors?.['required']">
+          Title is required
+        </div>
+        <div class="invalid-feedback" *ngIf="postForm.get('title')?.errors?.['minlength']">
+          Title must be at least 3 characters
+        </div>
+        <div class="invalid-feedback" *ngIf="postForm.get('title')?.errors?.['maxlength']">
+          Title cannot exceed 100 characters
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="content" class="form-label">Content</label>
+        <textarea
+          class="form-control"
+          id="content"
+          rows="5"
+          formControlName="content"
+          [class.is-invalid]="postForm.get('content')?.invalid && postForm.get('content')?.touched"
+        ></textarea>
+        <div class="invalid-feedback" *ngIf="postForm.get('content')?.errors?.['required']">
+          Content is required
+        </div>
+        <div class="invalid-feedback" *ngIf="postForm.get('content')?.errors?.['minlength']">
+          Content must be at least 10 characters
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" [disabled]="submitting">
+          <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          Create Post
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (click)="onCancel()">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
