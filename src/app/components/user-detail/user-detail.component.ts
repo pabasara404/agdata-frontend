@@ -1,21 +1,25 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, finalize } from 'rxjs';
 import { UserService } from '../../services/user.service';
-import { UserModel, UserUpdate } from '../../models/user.model';
+import { PostService } from '../../services/post.service';
+import { User, UpdateUserDto } from '../../models/user.model';
 
 @Component({
   selector: 'app-user-detail',
   templateUrl: './user-detail.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, RouterModule]
 })
 export class UserDetailComponent implements OnInit, OnDestroy {
   @Input() userId!: number;
 
-  user: UserModel | null = null;
+  user: User | null = null;
   loading = false;
+  loadingPosts = false;
+  postCount = 0;
 
   editForm: FormGroup;
 
@@ -25,6 +29,7 @@ export class UserDetailComponent implements OnInit, OnDestroy {
 
   constructor(
     private userService: UserService,
+    private postService: PostService,
     private fb: FormBuilder
   ) {
     this.editForm = this.fb.group({
@@ -34,18 +39,7 @@ export class UserDetailComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadUser();
-
-    // Subscribe to user changes
-    this.userService.user$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(user => {
-        this.user = user;
-        if (user) {
-          this.editForm.patchValue({
-            email: user.email
-          });
-        }
-      });
+    this.loadUserPostCount();
   }
 
   ngOnDestroy(): void {
@@ -60,7 +54,36 @@ export class UserDetailComponent implements OnInit, OnDestroy {
         finalize(() => this.loading = false),
         takeUntil(this.destroy$)
       )
-      .subscribe();
+      .subscribe({
+        next: (user) => {
+          this.user = user;
+          if (user) {
+            this.editForm.patchValue({
+              email: user.email
+            });
+          }
+        },
+        error: (err) => {
+          console.error('Error loading user:', err);
+        }
+      });
+  }
+
+  loadUserPostCount(): void {
+    this.loadingPosts = true;
+    this.postService.getPostsByUserId(this.userId)
+      .pipe(
+        finalize(() => this.loadingPosts = false),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (posts) => {
+          this.postCount = posts.length;
+        },
+        error: (err) => {
+          console.error('Error loading post count:', err);
+        }
+      });
   }
 
   get isAdmin(): boolean {
@@ -69,7 +92,7 @@ export class UserDetailComponent implements OnInit, OnDestroy {
 
   toggleEditMode(): void {
     this.editMode = !this.editMode;
-    if (!this.editMode) {
+    if (!this.editMode && this.user) {
       this.editForm.patchValue({
         email: this.user?.email
       });
@@ -84,7 +107,7 @@ export class UserDetailComponent implements OnInit, OnDestroy {
 
     if (!this.user) return;
 
-    const updatedUser: UserUpdate = {
+    const updatedUser: UpdateUserDto = {
       email: this.editForm.value.email
     };
 
@@ -93,7 +116,7 @@ export class UserDetailComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.editMode = false;
-          alert('UserModel updated successfully');
+          alert('User updated successfully');
           this.loadUser(); // Reload the user data
         },
         error: (err) => {

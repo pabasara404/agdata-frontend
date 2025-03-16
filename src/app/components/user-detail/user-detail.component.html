@@ -1,46 +1,97 @@
-<div class="user-detail-container mt-3" *ngIf="user">
-  <div class="card">
-    <div class="card-header">
-      UserModel Details
-      <span *ngIf="isAdmin" class="badge bg-danger float-end">Admin</span>
+<div *ngIf="loading" class="text-center py-4">
+  <div class="spinner-border" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<div *ngIf="!loading && user">
+  <div *ngIf="!editMode">
+    <div class="mb-3">
+      <h5>Username</h5>
+      <p>{{ user.username }}</p>
     </div>
-    <div class="card-body">
-      <div *ngIf="loading" class="d-flex justify-content-center">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-      </div>
 
-      <div *ngIf="!loading">
-        <h5 class="card-title">{{ user.username }}</h5>
+    <div class="mb-3">
+      <h5>Email</h5>
+      <p>{{ user.email }}</p>
+    </div>
 
-        <div *ngIf="!editMode">
-          <p>Email: {{ user.email }}</p>
-          <button class="btn btn-sm btn-primary" (click)="toggleEditMode()">Edit</button>
-        </div>
+    <div class="mb-3">
+      <h5>Role</h5>
+      <p>
+        <span [ngClass]="isAdmin ? 'badge bg-success' : 'badge bg-secondary'">
+          {{ isAdmin ? 'Admin' : 'Regular User' }}
+        </span>
+      </p>
+    </div>
 
-        <div *ngIf="editMode">
-          <form [formGroup]="editForm" (ngSubmit)="saveChanges()">
-            <div class="mb-3">
-              <label class="form-label">Email</label>
-              <input type="email" class="form-control" formControlName="email">
-              <div *ngIf="editForm.get('email')?.touched && editForm.get('email')?.invalid" class="text-danger">
-                <small *ngIf="editForm.get('email')?.errors?.['required']">Email is required</small>
-                <small *ngIf="editForm.get('email')?.errors?.['email']">Please enter a valid email</small>
-              </div>
-            </div>
-            <button type="submit" class="btn btn-sm btn-success me-2" [disabled]="editForm.invalid">Save</button>
-            <button type="button" class="btn btn-sm btn-secondary" (click)="toggleEditMode()">Cancel</button>
-          </form>
-        </div>
-      </div>
+    <div class="mb-3">
+      <h5>Notification Preferences</h5>
+      <p>
+        <span class="me-2">Email:</span>
+        <span [ngClass]="user.notificationPreferences?.emailEnabled ? 'badge bg-success' : 'badge bg-danger'">
+          {{ user.notificationPreferences?.emailEnabled ? 'Enabled' : 'Disabled' }}
+        </span>
+      </p>
+      <p>
+        <span class="me-2">Slack:</span>
+        <span [ngClass]="user.notificationPreferences?.slackEnabled ? 'badge bg-success' : 'badge bg-danger'">
+          {{ user.notificationPreferences?.slackEnabled ? 'Enabled' : 'Disabled' }}
+        </span>
+      </p>
+      <p *ngIf="user.notificationPreferences?.slackEnabled && user.notificationPreferences?.slackWebhookUrl">
+        <small class="text-muted">Webhook URL: {{ user.notificationPreferences?.slackWebhookUrl }}</small>
+      </p>
+    </div>
+
+    <div class="d-flex">
+      <button class="btn btn-outline-primary me-2" (click)="toggleEditMode()">Edit</button>
+      <a [routerLink]="['/users', user.id, 'edit']" class="btn btn-outline-secondary">Advanced Edit</a>
     </div>
   </div>
 
-  <div class="card mt-3" *ngIf="isAdmin">
-    <div class="card-header">Admin Controls</div>
-    <div class="card-body">
-      <p>Special admin features would go here</p>
+  <form [formGroup]="editForm" (ngSubmit)="saveChanges()" *ngIf="editMode">
+    <div class="mb-3">
+      <label for="username" class="form-label">Username</label>
+      <input type="text" class="form-control" id="username" [value]="user.username" disabled>
+      <small class="form-text text-muted">Username cannot be changed</small>
     </div>
-  </div>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" class="form-control" id="email" formControlName="email"
+             [ngClass]="{'is-invalid': editForm.get('email')?.invalid && editForm.get('email')?.touched}">
+      <div class="invalid-feedback" *ngIf="editForm.get('email')?.errors?.['required']">
+        Email is required
+      </div>
+      <div class="invalid-feedback" *ngIf="editForm.get('email')?.errors?.['email']">
+        Please enter a valid email address
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Role</label>
+      <p>
+        <span [ngClass]="isAdmin ? 'badge bg-success' : 'badge bg-secondary'">
+          {{ isAdmin ? 'Admin' : 'Regular User' }}
+        </span>
+        <small class="form-text text-muted d-block">Role cannot be changed</small>
+      </p>
+    </div>
+    <div class="mb-3">
+      <h5>Post Count</h5>
+      <p>
+        <span class="badge bg-info">{{ postCount }} {{ postCount === 1 ? 'post' : 'posts' }}</span>
+        <span *ngIf="loadingPosts" class="ms-2 spinner-border spinner-border-sm" role="status"></span>
+      </p>
+    </div>
+    <div class="d-flex">
+      <button type="submit" class="btn btn-primary me-2" [disabled]="editForm.invalid">Save</button>
+      <button type="button" class="btn btn-outline-secondary" (click)="toggleEditMode()">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<div *ngIf="!loading && !user" class="alert alert-warning">
+  User not found.
 </div>

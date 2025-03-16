@@ -1,0 +1,48 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Posts</h2>
+    <button class="btn btn-primary" (click)="toggleCreateForm()">
+      {{ showCreateForm ? 'Cancel' : 'Create Post' }}
+    </button>
+  </div>
+
+  <app-create-post
+    *ngIf="showCreateForm"
+    (postCreated)="onPostCreated($event)"
+    (cancelled)="showCreateForm = false">
+  </app-create-post>
+
+  <div *ngIf="loading" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && posts.length === 0" class="alert alert-info">
+    No posts found. Be the first to create a post!
+  </div>
+
+  <div *ngIf="!loading && posts.length > 0" class="row">
+    <div class="col-12">
+      <div class="card mb-3" *ngFor="let post of posts">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-0">{{ post.title }}</h5>
+            <small class="text-muted">Posted by {{ post.username }} on {{ post.createdAt | date:'medium' }}</small>
+          </div>
+          <div class="actions" *ngIf="canEditPost(post)">
+            <button class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/posts', post.id, 'edit']">Edit</button>
+            <button class="btn btn-sm btn-outline-danger" (click)="deletePost(post.id)">Delete</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-text">{{ post.content }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

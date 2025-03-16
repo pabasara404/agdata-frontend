@@ -17,41 +17,58 @@
     {{ error }}
   </div>
 
-  <table *ngIf="!loading && users.length > 0" class="table table-striped table-hover">
-    <thead>
-    <tr>
-      <th>ID</th>
-      <th>Username</th>
-      <th>Email</th>
-      <th>Admin</th>
-      <th>Email Notifications</th>
-      <th>Slack Notifications</th>
-      <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr *ngFor="let user of users">
-      <td>{{ user.id }}</td>
-      <td>{{ user.username }}</td>
-      <td>{{ user.email }}</td>
-      <td>
-        <span *ngIf="user.isAdmin" class="badge bg-primary">Yes</span>
-        <span *ngIf="!user.isAdmin" class="badge bg-secondary">No</span>
-      </td>
-      <td>
-        <span *ngIf="user.notificationPreferences?.emailEnabled" class="badge bg-success">Enabled</span>
-        <span *ngIf="!user.notificationPreferences?.emailEnabled" class="badge bg-danger">Disabled</span>
-      </td>
-      <td>
-        <span *ngIf="user.notificationPreferences?.slackEnabled" class="badge bg-success">Enabled</span>
-        <span *ngIf="!user.notificationPreferences?.slackEnabled" class="badge bg-danger">Disabled</span>
-      </td>
-      <td>
-        <button class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/users', user.id, 'edit']">Edit</button>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+  <div *ngIf="!loading && users.length > 0">
+    <div class="mb-4">
+      <table class="table table-striped table-hover">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Admin</th>
+          <th>Email Notifications</th>
+          <th>Slack Notifications</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let user of users" [ngClass]="{'table-active': user.id === selectedUserId}" (click)="selectUser(user.id)">
+          <td>{{ user.id }}</td>
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <span *ngIf="user.isAdmin" class="badge bg-danger">Yes</span>
+            <span *ngIf="!user.isAdmin" class="badge bg-secondary">No</span>
+          </td>
+          <td>
+            <span *ngIf="user.notificationPreferences?.emailEnabled" class="badge bg-success">Enabled</span>
+            <span *ngIf="!user.notificationPreferences?.emailEnabled" class="badge bg-danger">Disabled</span>
+          </td>
+          <td>
+            <span *ngIf="user.notificationPreferences?.slackEnabled" class="badge bg-success">Enabled</span>
+            <span *ngIf="!user.notificationPreferences?.slackEnabled" class="badge bg-danger">Disabled</span>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/users', user.id, 'edit']">Edit</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="selectedUserId !== null">
+      <!-- User detail component -->
+      <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h4 class="mb-0">User Details</h4>
+          <button type="button" class="btn-close" aria-label="Close" (click)="closeDetails()"></button>
+        </div>
+        <div class="card-body">
+          <app-user-detail [userId]="selectedUserId"></app-user-detail>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div *ngIf="!loading && users.length === 0" class="alert alert-info">
     No users found. Click "Add User" to create one.
