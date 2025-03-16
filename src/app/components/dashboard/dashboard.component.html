@@ -1,0 +1,88 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <h2>Welcome, {{ currentUser?.username }}</h2>
+      <p class="text-muted">{{ currentUser?.isAdmin ? 'Administrator' : 'User' }} Dashboard</p>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center py-4">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading" class="row mt-4">
+    <!-- Admin Stats -->
+    <div class="col-md-4 mb-4" *ngIf="currentUser?.isAdmin">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <h5 class="card-title">Total Users</h5>
+          <p class="card-text display-6">{{ totalUsers }}</p>
+          <a routerLink="/users" class="btn btn-outline-light btn-sm">View Users</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Post Stats -->
+    <div class="col-md-4 mb-4">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">{{ currentUser?.isAdmin ? 'Total' : 'Your' }} Posts</h5>
+          <p class="card-text display-6">{{ totalPosts }}</p>
+          <a routerLink="/posts" class="btn btn-outline-light btn-sm">View Posts</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="col-md-4 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Profile</h5>
+          <p class="mb-1"><strong>Username:</strong> {{ currentUser?.username }}</p>
+          <p class="mb-1"><strong>Email:</strong> {{ currentUser?.email }}</p>
+          <p class="mb-1">
+            <strong>Role:</strong>
+            <span [ngClass]="currentUser?.isAdmin ? 'badge bg-success' : 'badge bg-secondary'">
+              {{ currentUser?.isAdmin ? 'Admin' : 'Regular User' }}
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Posts -->
+  <div *ngIf="!loading && userPosts.length > 0" class="row mt-2">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">{{ currentUser?.isAdmin ? 'Recent' : 'Your' }} Posts</h5>
+          <a routerLink="/posts" class="btn btn-outline-primary btn-sm">View All</a>
+        </div>
+        <div class="card-body">
+          <div class="list-group">
+            <div *ngFor="let post of userPosts" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ post.title }}</h5>
+                <small>{{ post.createdAt | date:'medium' }}</small>
+              </div>
+              <p class="mb-1 text-truncate">{{ post.content }}</p>
+              <small class="text-muted">By {{ post.username }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && userPosts.length === 0" class="alert alert-info mt-4">
+    <p>You haven't created any posts yet.</p>
+    <a routerLink="/posts" class="btn btn-primary">Create Your First Post</a>
+  </div>
+</div>
