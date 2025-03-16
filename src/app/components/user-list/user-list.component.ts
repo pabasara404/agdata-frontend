@@ -1,83 +1,149 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, SimpleChanges, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Subject, takeUntil, finalize } from 'rxjs';
 import { UserService } from '../../services/user.service';
-import { User } from '../../models/user.model';
-import { UserDetailComponent } from '../user-detail/user-detail.component';
+import { PostService } from '../../services/post.service';
+import { User, UpdateUserDto } from '../../models/user.model';
 
 @Component({
-  selector: 'app-user-list',
+  selector: 'app-user-detail',
+  templateUrl: './user-detail.component.html',
   standalone: true,
-  imports: [CommonModule, RouterModule, UserDetailComponent],
-  templateUrl: './user-list.component.html',
-  styleUrls: ['./user-list.component.css']
+  imports: [CommonModule, ReactiveFormsModule, RouterModule]
 })
-export class UserListComponent implements OnInit {
-  users: User[] = [];
-  loading = false;
-  error: string | null = null;
-  selectedUserId: number | null = null;
-  showDetails = false;
+export class UserDetailComponent implements OnInit, OnDestroy, OnChanges {
+  @Input() userId!: number | null;
 
-  constructor(private userService: UserService) { }
+  user: User | null = null;
+  loading = false;
+  loadingPosts = false;
+  postCount = 0;
+
+  editForm: FormGroup;
+
+  editMode = false;
+
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private userService: UserService,
+    private postService: PostService,
+    private fb: FormBuilder
+  ) {
+    this.editForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]]
+    });
+  }
 
   ngOnInit(): void {
-    this.loadUsers();
+    this.loadUser();
+    this.loadUserPostCount();
   }
 
-  loadUsers(): void {
-    this.loading = true;
-    this.error = null;
-    this.userService.getUsers().subscribe({
-      next: (data) => {
-        this.users = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = 'Failed to load users. Please try again.';
-        this.loading = false;
-        console.error('Error loading users:', err);
-      }
-    });
-  }
+  ngOnChanges(changes: SimpleChanges): void {
+    // When userId changes, reload data
+    if (changes['userId'] && !changes['userId'].firstChange) {
+      // Reset UI state
+      this.editMode = false;
+      this.user = null;
 
-  exportToCsv(): void {
-    this.userService.exportUsersToCsv().subscribe({
-      next: (blob) => {
-        // Create a URL for the blob
-        const url = window.URL.createObjectURL(blob);
-
-        // Create a link element
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'users.csv';
-
-        // Append to the document
-        document.body.appendChild(a);
-
-        // Trigger a click
-        a.click();
-
-        // Cleanup
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      },
-      error: (err) => {
-        this.error = 'Failed to export users to CSV. Please try again.';
-        console.error('Error exporting users:', err);
-      }
-    });
-  }
-
-  selectUser(userId: number | undefined): void {
-    if (userId) {
-      this.selectedUserId = userId;
-      this.showDetails = true;
+      // Load new data
+      this.loadUser();
+      this.loadUserPostCount();
     }
   }
 
-  closeDetails(): void {
-    this.selectedUserId = null;
-    this.showDetails = false;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadUser(): void {
+    if (!this.userId) {
+      return;
+    }
+
+    this.loading = true;
+    this.userService.getUserById(this.userId)
+      .pipe(
+        finalize(() => this.loading = false),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (user) => {
+          this.user = user;
+          if (user) {
+            this.editForm.patchValue({
+              email: user.email
+            });
+          }
+        },
+        error: (err) => {
+          console.error('Error loading user:', err);
+        }
+      });
+  }
+
+  loadUserPostCount(): void {
+    if (!this.userId) {
+      return;
+    }
+
+    this.loadingPosts = true;
+    this.postService.getPostsByUserId(this.userId)
+      .pipe(
+        finalize(() => this.loadingPosts = false),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (posts) => {
+          this.postCount = posts.length;
+        },
+        error: (err) => {
+          console.error('Error loading post count:', err);
+        }
+      });
+  }
+
+  get isAdmin(): boolean {
+    return this.user?.isAdmin || false;
+  }
+
+  toggleEditMode(): void {
+    this.editMode = !this.editMode;
+    if (!this.editMode && this.user) {
+      this.editForm.patchValue({
+        email: this.user?.email
+      });
+    }
+  }
+
+  saveChanges(): void {
+    if (this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
+      return;
+    }
+
+    if (!this.user || !this.userId) return;
+
+    const updatedUser: UpdateUserDto = {
+      email: this.editForm.value.email
+    };
+
+    this.userService.updateUser(this.userId, updatedUser)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.editMode = false;
+          alert('User updated successfully');
+          this.loadUser(); // Reload the user data
+        },
+        error: (err) => {
+          console.error('Error updating user:', err);
+          alert('Error updating user');
+        }
+      });
   }
 }
